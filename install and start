@@ -1,0 +1,46 @@
+- name: Add Elasticsearch, Kibana, and Logstash APT repositories
+  apt_key:
+    url: "{{ item.url }}"
+  apt_repository:
+    repo: "{{ item.repo }}"
+  loop:
+    - { url: "https://packages.elastic.co/GPG-KEY-elasticsearch", repo: "deb http://packages.elastic.co/elasticsearch/1.7/debian stable main" }
+    - { url: "https://artifacts.elastic.co/packages/7.x/apt/gpg", repo: "deb https://artifacts.elastic.co/packages/7.x/apt stable main" }
+    - { url: "https://packages.elasticsearch.org/GPG-KEY-logstash", repo: "deb http://packages.elasticsearch.org/logstash/1.5/debian stable main" }
+
+- name: Install Elasticsearch, Kibana, and Logstash on Ubuntu
+  apt:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - elasticsearch
+    - kibana
+    - logstash
+
+- name: Enable and Start Elasticsearch, Kibana, and Logstash
+  systemd:
+    name: "{{ item }}"
+    enabled: yes
+    state: started
+  loop:
+    - elasticsearch
+    - kibana
+    - logstash
+
+- name: Configure Elasticsearch
+  template:
+    src: elasticsearch.yml.j2
+    dest: /etc/elasticsearch/elasticsearch.yml
+  when: ansible_distribution == "Ubuntu"
+
+- name: Configure Kibana
+  template:
+    src: kibana.yml.j2
+    dest: /etc/kibana/kibana.yml
+  when: ansible_distribution == "Ubuntu"
+
+- name: Configure Logstash
+  template:
+    src: logstash.conf.j2
+    dest: /etc/logstash/logstash.conf
+  when: ansible_distribution == "Ubuntu"
